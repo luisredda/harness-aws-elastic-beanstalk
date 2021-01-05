@@ -72,5 +72,5 @@ On "Elastic Beanstalk Folder":
 - Add a new step and link the "Deploy AWS Beanstalk" service command from Template Library. If you have many delegates, pick your delegate selector and make sure that the Delegate have the AWS CLI and JQ installed.
 - In the rollback steps, link the "Rollback Elastic Beanstalk" template.
 
-You are good to go and start deploying your Beanstalk services with Harness!
+You are good to go and start deploying your Beanstalk services with Harness! 
 
