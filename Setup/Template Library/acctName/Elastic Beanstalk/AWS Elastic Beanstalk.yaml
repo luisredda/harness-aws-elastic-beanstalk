@@ -1,0 +1,45 @@
+harnessApiVersion: '1.0'
+type: CUSTOM_DEPLOYMENT_TYPE
+fetchInstanceScript: |-
+  export AWS_DEFAULT_REGION=${infra.custom.vars.Region}
+  AWS_STS_ROLE=${infra.custom.vars.stsRole}
+  NAME="Harness-Assume-Role"
+
+  if [ ! -z "$AWS_STS_ROLE" ]; then
+    echo "Assuming STS Role..."
+
+  # Cleanup current sessions
+    unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN
+
+    unset AWS_ACCESS_KEY AWS_SECRET_KEY AWS_DELEGATION_TOKEN
+
+    KST=(`aws sts assume-role --role-arn "$AWS_STS_ROLE" \
+                            --role-session-name "$NAME" \
+                            --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken]' \
+  --output text`)
+
+    export AWS_ACCESS_KEY_ID=${KST[0]}
+    export AWS_SECRET_ACCESS_KEY=${KST[1]}
+    export AWS_SESSION_TOKEN=${KST[2]}
+
+  else
+     echo "Skipping STS AssumeRole..."
+  fi
+
+  OUTPUT=`aws elasticbeanstalk describe-instances-health --environment-name=${infra.custom.vars.EnvironmentName}`
+
+  echo ${OUTPUT}
+
+  cat > $INSTANCE_OUTPUT_PATH <<EOF
+  ${OUTPUT}
+  EOF
+hostAttributes:
+  hostname: InstanceId
+hostObjectArrayPath: InstanceHealthList
+variables:
+- description: AWS Beanstalk Environment Name
+  name: EnvironmentName
+- description: AWS Region
+  name: Region
+- description: STS Role to Assume. Leave it blank if not necessary
+  name: stsRole
